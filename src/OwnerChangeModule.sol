@@ -1,18 +1,15 @@
 // SPDX-License-Identifier: LGPL-3.0
 pragma solidity ^0.8.0;
-// Imports will be added here
 
-import "@safe-global/safe-contracts/contracts/common/Enum.sol";
-import "@safe-global/safe-contracts/contracts/Safe.sol";
+import "safe-contracts/contracts/libraries/Enum.sol";
+import "safe-contracts/contracts/Safe.sol";
 
 contract OwnerChangeModule {
-    // State variables will be added here
-    /**
-     * @dev Replace all owners with a new set of owners
-     * @param safe Address of the Safe wallet
-     * @param owner Address of the owner of the will who can trigger the ping
-      * @param heir Address of the heir who can trigger the change
-     */
+
+    //Events
+    event Pinged(address indexed owner, uint256 timestamp);
+    event OwnersReplaced(address indexed heir, uint256 timestamp);
+
     address public immutable safe;
     address public immutable owner;
     address public immutable heir;
@@ -45,10 +42,11 @@ contract OwnerChangeModule {
 
     function ping() external onlyOwner {
         lastPing = block.timestamp;
+        emit Pinged(msg.sender, block.timestamp);
     }
 
     /**
-     * @param newOwner new owner address
+     * @dev Replace all owners with the heir
      */
     function replaceAllOwners() external onlyHeir {
         require(lastPing + PING_THRESHOLD < block.timestamp, "Ping not expired");
@@ -83,12 +81,13 @@ contract OwnerChangeModule {
             "swapOwner(address,address,address)",
             address(0x1), // SENTINEL_OWNERS
             oldOwners[0],
-            newOwner
+            heir
         );
 
         require(
             Safe(payable(safe)).execTransactionFromModule(safe, 0, swapData, Enum.Operation.Call),
             "Could not swap owner"
         );
+        emit OwnersReplaced(heir, block.timestamp);
     }
 }
