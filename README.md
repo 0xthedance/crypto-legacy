@@ -1,66 +1,19 @@
-## Foundry
+# Crypto Will - Smart Contract Digital Inheritance System
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+A blockchain-based digital inheritance system that automatically transfers ownership of a Gnosis Safe wallet to designated heirs when the original owner becomes inactive for a specified period.
 
-Foundry consists of:
+## Overview
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+This project implements a "dead man's switch" mechanism for cryptocurrency wallets using the Gnosis Safe multisig wallet system. The smart contract monitors the owner's activity through a "ping" mechanism and automatically transfers wallet ownership to a designated heir if the owner fails to check in for a predetermined time period.
 
-## Documentation
+### Key Features
 
-https://book.getfoundry.sh/
+- **Ping Mechanism**: Owner must periodically "ping" the contract to prove they are still active
+- **Automatic Inheritance**: If ping threshold expires, designated heir can claim wallet ownership
+- **Safe Integration**: Built as a module for Gnosis Safe wallets
+- **Time-based Security**: Configurable inactivity period before inheritance activation
+- **Single Heir Support**: Transfers complete wallet control to one designated beneficiary
 
-## Usage
+## License
 
-### Build
-
-```shell
-$ forge build
-```
-
-### Test
-
-```shell
-$ forge test
-```
-
-### Format
-
-```shell
-$ forge fmt
-```
-
-### Gas Snapshots
-
-```shell
-$ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+This project is licensed under LGPL-3.0.

@@ -5,7 +5,6 @@ import "safe-contracts/contracts/libraries/Enum.sol";
 import "safe-contracts/contracts/Safe.sol";
 
 contract OwnerChangeModule {
-
     //Events
     event Pinged(address indexed owner, uint256 timestamp);
     event OwnersReplaced(address indexed heir, uint256 timestamp);

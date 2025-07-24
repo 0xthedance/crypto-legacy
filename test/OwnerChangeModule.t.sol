@@ -19,7 +19,7 @@ contract OwnerChangeModuleTest is Test {
     uint256 public ownerPrivateKey = 1;
     uint256 public initialOwner1PrivateKey = 2;
     uint256 public initialOwner2PrivateKey = 3;
-    
+
     address public owner = vm.addr(ownerPrivateKey);
     address public heir = address(0x3);
     address public initialOwner1 = vm.addr(initialOwner1PrivateKey);
@@ -37,7 +37,9 @@ contract OwnerChangeModuleTest is Test {
         uint256 threshold = 1; // Minimum number of signatures required
 
         vm.startPrank(owner);
-        safeProxy = proxyFactory.createProxyWithNonce(address(safeMasterCopy), new bytes(0), uint256(keccak256(abi.encodePacked(owner, block.timestamp))));
+        safeProxy = proxyFactory.createProxyWithNonce(
+            address(safeMasterCopy), new bytes(0), uint256(keccak256(abi.encodePacked(owner, block.timestamp)))
+        );
         Safe(payable(safeProxy)).setup(
             initialOwners,
             threshold,
@@ -51,30 +53,25 @@ contract OwnerChangeModuleTest is Test {
 
         ownerChangeModule = new OwnerChangeModule(address(safeProxy), owner, heir, PING_THRESHOLD);
 
-        bytes memory enableModuleData = abi.encodeWithSelector(
-            Safe(payable(safeProxy)).enableModule.selector,
-            ownerChangeModule
-        );
+        bytes memory enableModuleData =
+            abi.encodeWithSelector(Safe(payable(safeProxy)).enableModule.selector, ownerChangeModule);
 
         bool success = _executeSafeTransaction(
-            0,                      // value
-            enableModuleData,      // data
-            Enum.Operation.Call     // operation
+            0, // value
+            enableModuleData, // data
+            Enum.Operation.Call // operation
         );
 
         require(success, "Failed to enable module");
 
         // Change the threshold to 2 to allow the heir to replace owners
 
-        bytes memory changeThresholdData = abi.encodeWithSelector(
-            Safe(payable(safeProxy)).changeThreshold.selector,
-            2
-        );
+        bytes memory changeThresholdData = abi.encodeWithSelector(Safe(payable(safeProxy)).changeThreshold.selector, 2);
 
         success = _executeSafeTransaction(
-            0,                      // value
-            changeThresholdData,    // data
-            Enum.Operation.Call     // operation
+            0, // value
+            changeThresholdData, // data
+            Enum.Operation.Call // operation
         );
 
         require(success, "Failed to change threshold");
@@ -83,44 +80,41 @@ contract OwnerChangeModuleTest is Test {
     }
 
     // Helper function to execute a Safe transaction
-    function _executeSafeTransaction(
-        uint256 value,
-        bytes memory data,
-        Enum.Operation operation
-    ) internal returns (bool) {
-
+    function _executeSafeTransaction(uint256 value, bytes memory data, Enum.Operation operation)
+        internal
+        returns (bool)
+    {
         // Create the transaction hash
         bytes32 txHash = Safe(payable(safeProxy)).getTransactionHash(
-            address(safeProxy),     // to
-            value,                      // value
-            data,                   // data
-            operation,              // operation
-            0,                      // safeTxGas
-            0,                      // baseGas
-            0,                      // gasPrice
-            address(0),             // gasToken
-            payable(address(0)),    // refundReceiver
-            Safe(payable(safeProxy)).nonce()     // nonce
+            address(safeProxy), // to
+            value, // value
+            data, // data
+            operation, // operation
+            0, // safeTxGas
+            0, // baseGas
+            0, // gasPrice
+            address(0), // gasToken
+            payable(address(0)), // refundReceiver
+            Safe(payable(safeProxy)).nonce() // nonce
         );
-        
+
         // Create signatures for the transaction
         bytes memory signatures = _createSignatures(txHash);
 
         bool success = Safe(payable(safeProxy)).execTransaction(
-            address(safeProxy),     // to
-            value,                      // value
-            data,       // data
-            Enum.Operation.Call,    // operation
-            0,                      // safeTxGas
-            0,                      // baseGas
-            0,                      // gasPrice
-            address(0),             // gasToken
-            payable(address(0)),    // refundReceiver
-            signatures              // signatures
+            address(safeProxy), // to
+            value, // value
+            data, // data
+            Enum.Operation.Call, // operation
+            0, // safeTxGas
+            0, // baseGas
+            0, // gasPrice
+            address(0), // gasToken
+            payable(address(0)), // refundReceiver
+            signatures // signatures
         );
 
         return success;
-
     }
 
     // Helper function to create signatures for Safe transactions
@@ -145,25 +139,25 @@ contract OwnerChangeModuleTest is Test {
         vm.prank(heir);
         vm.expectRevert("Not owner");
         ownerChangeModule.ping();
-        
+
         // Stranger cannot ping
-        vm.prank(stranger); 
+        vm.prank(stranger);
         vm.expectRevert("Not owner");
         ownerChangeModule.ping();
     }
-    
+
     function testReplaceAllOwnersWhenPingExpires() public {
         vm.prank(owner);
         ownerChangeModule.ping();
-        
+
         // Move time forward to simulate ping expiration
         vm.warp(block.timestamp + PING_THRESHOLD + 1);
-        
+
         // Replace all owners with the heir
-        vm.prank(heir); 
+        vm.prank(heir);
 
         ownerChangeModule.replaceAllOwners();
-        
+
         // Check that the owner is now the heir
         address[] memory owners = Safe(payable(safeProxy)).getOwners();
         assertEq(owners.length, 1);
@@ -173,16 +167,15 @@ contract OwnerChangeModuleTest is Test {
     function testOnlyHeirCanReplaceOwners() public {
         vm.prank(owner);
         ownerChangeModule.ping();
-        
+
         // Move time forward to simulate ping expiration
         vm.warp(block.timestamp + PING_THRESHOLD + 1);
-        
 
         // Owner cannot replace owners
         vm.prank(owner);
         vm.expectRevert("Not heir");
         ownerChangeModule.replaceAllOwners();
-        
+
         // Stranger cannot replace owners
         vm.prank(stranger);
         vm.expectRevert("Not heir");
@@ -192,11 +185,10 @@ contract OwnerChangeModuleTest is Test {
     function testReplaceAllOwnersWhenPingNotExpired() public {
         vm.prank(owner);
         ownerChangeModule.ping();
-        
+
         // Try to replace owners before ping expires
         vm.prank(heir);
         vm.expectRevert("Ping not expired");
         ownerChangeModule.replaceAllOwners();
     }
-
 }
