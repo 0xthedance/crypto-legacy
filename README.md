@@ -13,7 +13,3 @@ This project implements a "dead man's switch" mechanism for cryptocurrency walle
 - **Safe Integration**: Built as a module for Gnosis Safe wallets
 - **Time-based Security**: Configurable inactivity period before inheritance activation
 - **Single Heir Support**: Transfers complete wallet control to one designated beneficiary
-
-## License
-
-This project is licensed under LGPL-3.0.
